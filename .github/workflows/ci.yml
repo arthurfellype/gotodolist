@@ -7,13 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 🔒 Princípio do Menor Privilégio
 permissions:
   contents: read
+
+# Evita execuções concorrentes desnecessárias no mesmo PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint-and-test:
     name: Lint and test
     runs-on: ubuntu-latest
+    timeout-minutes: 10 # 🔒 Timeout para evitar consumo acidental de recursos
 
     steps:
       - name: Checkout repository
@@ -23,6 +30,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: true # ⚡ Habilita o cache nativo de dependências
 
       - name: Download Go modules
         run: go mod download
@@ -48,6 +56,7 @@ jobs:
     name: Validate containers
     runs-on: ubuntu-latest
     needs: lint-and-test
+    timeout-minutes: 15
 
     steps:
       - name: Checkout repository
